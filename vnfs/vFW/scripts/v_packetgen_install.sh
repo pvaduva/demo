@@ -28,8 +28,8 @@ then
 	IP=$(cat /opt/config/vpg_private_ip_0.txt)
 	BITS=$(cat /opt/config/unprotected_private_net_cidr.txt | cut -d"/" -f2)
 	NETMASK=$(cdr2mask $BITS)
-	echo "auto eth1" >> /etc/network/interfaces
-	echo "iface eth1 inet static" >> /etc/network/interfaces
+	echo "auto enp1s0" >> /etc/network/interfaces
+	echo "iface enp1s0 inet static" >> /etc/network/interfaces
 	echo "    address $IP" >> /etc/network/interfaces
 	echo "    netmask $NETMASK" >> /etc/network/interfaces
 	echo "    mtu $MTU" >> /etc/network/interfaces
@@ -37,14 +37,14 @@ then
 	IP=$(cat /opt/config/vpg_private_ip_1.txt)
 	BITS=$(cat /opt/config/onap_private_net_cidr.txt | cut -d"/" -f2)
 	NETMASK=$(cdr2mask $BITS)
-	echo "auto eth2" >> /etc/network/interfaces
-	echo "iface eth2 inet static" >> /etc/network/interfaces
+	echo "auto enp2s0" >> /etc/network/interfaces
+	echo "iface enp2s0 inet static" >> /etc/network/interfaces
 	echo "    address $IP" >> /etc/network/interfaces
 	echo "    netmask $NETMASK" >> /etc/network/interfaces
 	echo "    mtu $MTU" >> /etc/network/interfaces
 
-	ifup eth1
-	ifup eth2
+	ifup enp1s0
+	ifup enp2s0
 fi
 
 # Download required dependencies
@@ -74,12 +74,13 @@ chmod +x v_packetgen_init.sh
 chmod +x vpacketgen.sh
 
 # Install VPP
-export UBUNTU="trusty"
-export RELEASE=".stable.1609"
+export UBUNTU="xenial"
+export RELEASE=".stable.1804"
 rm /etc/apt/sources.list.d/99fd.io.list
-echo "deb [trusted=yes] https://nexus.fd.io/content/repositories/fd.io$RELEASE.ubuntu.$UBUNTU.main/ ./" | sudo tee -a /etc/apt/sources.list.d/99fd.io.list
+echo "deb [trusted=yes] https://nexus.fd.io/content/repositories/fd.io$RELEASE.ubuntu-arm.$UBUNTU.main/ ./" | sudo tee -a /etc/apt/sources.list.d/99fd.io.list
+echo "deb [trusted=yes] http://ubuntu-cloud.archive.canonical.com/ubuntu xenial-updates/queens/main ./" | sudo tee -a /etc/apt/sources.list.d/99fd.io.list
 apt-get update
-apt-get install -y vpp vpp-dpdk-dkms vpp-lib vpp-dbg vpp-plugins vpp-dev
+apt-get install -y vpp vpp-lib vpp-dbg vpp-plugins vpp-dev dpdk dpdk-dev dpdk-igb-uio-dkms dpdk-rte-kni-dkms
 sleep 1
 
 # Install honeycomb restart script (workaround due to honeycomb file handle leak)

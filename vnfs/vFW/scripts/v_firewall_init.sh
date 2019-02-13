@@ -22,42 +22,47 @@ mask2cidr() {
 }
 
 # Start VPP
+if ! which start; then
+	echo "#!/bin/bash" > /usr/local/sbin/start
+	echo "systemctl start \$1" >> /usr/local/sbin/start
+	chmod u+x /usr/local/sbin/start
+fi
 start vpp
 sleep 1
 
 # Configure VPP for vFirewall
-IPADDR1=$(ifconfig eth1 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
-IPADDR2=$(ifconfig eth2 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
-HWADDR1=$(ifconfig eth1 | grep HWaddr | tr -s ' ' | cut -d' ' -f5)
-HWADDR2=$(ifconfig eth2 | grep HWaddr | tr -s ' ' | cut -d' ' -f5)
+IPADDR1=$(ifconfig enp2s0 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
+IPADDR2=$(ifconfig enp3s0 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
+HWADDR1=$(ifconfig enp2s0 | grep -Po "HWaddr \K(.*)" | tr -d ':')
+HWADDR2=$(ifconfig enp3s0 | grep -Po "HWaddr \K(.*)" | tr -d ':')
 FAKE_HWADDR1=$(echo -n 00; dd bs=1 count=5 if=/dev/urandom 2>/dev/null | hexdump -v -e '/1 ":%02X"')
 FAKE_HWADDR2=$(echo -n 00; dd bs=1 count=5 if=/dev/urandom 2>/dev/null | hexdump -v -e '/1 ":%02X"')
 
-IPADDR1_MASK=$(ifconfig eth1 | grep "Mask" | awk '{print $4}' | awk -F ":" '{print $2}')
+IPADDR1_MASK=$(ifconfig enp2s0 | grep "Mask" | awk '{print $4}' | awk -F ":" '{print $2}')
 IPADDR1_CIDR=$(mask2cidr $IPADDR1_MASK)
-IPADDR2_MASK=$(ifconfig eth2 | grep "Mask" | awk '{print $4}' | awk -F ":" '{print $2}')
+IPADDR2_MASK=$(ifconfig enp3s0 | grep "Mask" | awk '{print $4}' | awk -F ":" '{print $2}')
 IPADDR2_CIDR=$(mask2cidr $IPADDR2_MASK)
 
-ifconfig eth1 down
-ifconfig eth2 down
-ifconfig eth1 hw ether $FAKE_HWADDR1
-ifconfig eth2 hw ether $FAKE_HWADDR2
-ip addr flush dev eth1
-ip addr flush dev eth2
-ifconfig eth1 up
-ifconfig eth2 up
+ifconfig enp2s0 down
+ifconfig enp3s0 down
+ifconfig enp2s0 hw ether $FAKE_HWADDR1
+ifconfig enp3s0 hw ether $FAKE_HWADDR2
+ip addr flush dev enp2s0
+ip addr flush dev enp3s0
+ifconfig enp2s0 up
+ifconfig enp3s0 up
 vppctl tap connect tap111 hwaddr $HWADDR1
 vppctl tap connect tap222 hwaddr $HWADDR2
-vppctl set int ip address tap-0 $IPADDR1"/"$IPADDR1_CIDR
-vppctl set int ip address tap-1 $IPADDR2"/"$IPADDR2_CIDR
-vppctl set int state tap-0 up
-vppctl set int state tap-1 up
+vppctl set int ip address tapcli-0 $IPADDR1"/"$IPADDR1_CIDR
+vppctl set int ip address tapcli-1 $IPADDR2"/"$IPADDR2_CIDR
+vppctl set int state tapcli-0 up
+vppctl set int state tapcli-1 up
 brctl addbr br0
 brctl addif br0 tap111
-brctl addif br0 eth1
+brctl addif br0 enp2s0
 brctl addbr br1
 brctl addif br1 tap222
-brctl addif br1 eth2
+brctl addif br1 enp3s0
 ifconfig br0 up
 ifconfig br1 up
 sleep 1

@@ -45,8 +45,8 @@ PLANTFLAGS=-tsvg
 # Standard compiler flags.                                                    *
 #******************************************************************************
 CPPFLAGS=-I $(EVELLIB_ROOT)
-CFLAGS=-Wall -Wextra -m$(ARCH) -g -fPIC
-LIBCFLAGS=-Wall -Wextra -m$(ARCH) -g -shared -fPIC
+CFLAGS=-Wall -Wextra -march=native -g -fPIC
+LIBCFLAGS=-Wall -Wextra -march=native -g -shared -fPIC
 
 #******************************************************************************
 # The testbed is a VM instance where we can install the EVEL example under    *

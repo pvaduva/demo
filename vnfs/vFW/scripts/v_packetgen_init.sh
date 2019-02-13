@@ -22,30 +22,35 @@ mask2cidr() {
 }
 
 # Start VPP
+if ! which start; then
+	echo "#!/bin/bash" > /usr/local/sbin/start
+	echo "systemctl start \$1" >> /usr/local/sbin/start
+	chmod u+x /usr/local/sbin/start
+fi
 start vpp
 sleep 1
 
 # Configure VPP for vPacketGenerator
-IPADDR1=$(ifconfig eth1 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
-HWADDR1=$(ifconfig eth1 | grep HWaddr | tr -s ' ' | cut -d' ' -f5)
+IPADDR1=$(ifconfig enp2s0 | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
+HWADDR1=$(ifconfig enp2s0 | grep -Po "HWaddr \K(.*)" | tr -d ':')
 FAKE_HWADDR1=$(echo -n 00; dd bs=1 count=5 if=/dev/urandom 2>/dev/null | hexdump -v -e '/1 ":%02X"')
 PROTECTED_NET_CIDR=$(cat /opt/config/protected_net_cidr.txt)
 FW_IPADDR=$(cat /opt/config/fw_ipaddr.txt)
 SINK_IPADDR=$(cat /opt/config/sink_ipaddr.txt)
 
-IPADDR1_MASK=$(ifconfig eth1 | grep "Mask" | awk '{print $4}' | awk -F ":" '{print $2}')
+IPADDR1_MASK=$(ifconfig enp2s0 | grep "Mask" | awk '{print $4}' | awk -F ":" '{print $2}')
 IPADDR1_CIDR=$(mask2cidr $IPADDR1_MASK)
 
-ifconfig eth1 down
-ifconfig eth1 hw ether $FAKE_HWADDR1
-ip addr flush dev eth1
-ifconfig eth1 up
+ifconfig enp2s0 down
+ifconfig enp2s0 hw ether $FAKE_HWADDR1
+ip addr flush dev enp2s0
+ifconfig enp2s0 up
 vppctl tap connect tap111 hwaddr $HWADDR1
-vppctl set int ip address tap-0 $IPADDR1"/"$IPADDR1_CIDR
-vppctl set int state tap-0 up
+vppctl set int ip address tapcli-0 $IPADDR1"/"$IPADDR1_CIDR
+vppctl set int state tapcli-0 up
 brctl addbr br0
 brctl addif br0 tap111
-brctl addif br0 eth1
+brctl addif br0 enp2s0
 ifconfig br0 up
 vppctl ip route add $PROTECTED_NET_CIDR via $FW_IPADDR
 sleep 1

@@ -25,8 +25,8 @@ then
 	IP=$(cat /opt/config/vsn_private_ip_0.txt)
 	BITS=$(cat /opt/config/protected_private_net_cidr.txt | cut -d"/" -f2)
 	NETMASK=$(cdr2mask $BITS)
-	echo "auto eth1" >> /etc/network/interfaces
-	echo "iface eth1 inet static" >> /etc/network/interfaces
+	echo "auto enp2s0" >> /etc/network/interfaces
+	echo "iface enp2s0 inet static" >> /etc/network/interfaces
 	echo "    address $IP" >> /etc/network/interfaces
 	echo "    netmask $NETMASK" >> /etc/network/interfaces
 	echo "    mtu $MTU" >> /etc/network/interfaces
@@ -34,14 +34,14 @@ then
 	IP=$(cat /opt/config/vsn_private_ip_1.txt)
 	BITS=$(cat /opt/config/onap_private_net_cidr.txt | cut -d"/" -f2)
 	NETMASK=$(cdr2mask $BITS)
-	echo "auto eth2" >> /etc/network/interfaces
-	echo "iface eth2 inet static" >> /etc/network/interfaces
+	echo "auto enp3s0" >> /etc/network/interfaces
+	echo "iface enp3s0 inet static" >> /etc/network/interfaces
 	echo "    address $IP" >> /etc/network/interfaces
 	echo "    netmask $NETMASK" >> /etc/network/interfaces
 	echo "    mtu $MTU" >> /etc/network/interfaces
 
-	ifup eth1
-	ifup eth2
+	ifup enp2s0
+	ifup enp3s0
 fi
 
 # Download required dependencies
@@ -52,7 +52,7 @@ apt-get install --allow-unauthenticated -y make wget openjdk-8-jdk apt-transport
 
 # Configure and run Darkstat
 sed -i "s/START_DARKSTAT=.*/START_DARKSTAT=yes/g" /etc/darkstat/init.cfg
-sed -i "s/INTERFACE=.*/INTERFACE=\"-i eth1\"/g" /etc/darkstat/init.cfg
+sed -i "s/INTERFACE=.*/INTERFACE=\"-i enp2s0\"/g" /etc/darkstat/init.cfg
 /etc/init.d/darkstat start
 
 # Download scripts for virtual sink
