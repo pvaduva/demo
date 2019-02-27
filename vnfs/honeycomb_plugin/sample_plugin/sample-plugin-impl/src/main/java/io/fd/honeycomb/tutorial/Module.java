@@ -24,9 +24,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import io.fd.honeycomb.data.init.DataTreeInitializer;
 import io.fd.honeycomb.translate.read.ReaderFactory;
-import io.fd.honeycomb.translate.v3po.util.NamingContext;
+import io.fd.hc2vpp.common.translate.util.NamingContext;
 import io.fd.honeycomb.translate.write.WriterFactory;
-import io.fd.honeycomb.tutorial.init.ConfigDataInitializer;
 //import io.fd.honeycomb.tutorial.read.ModuleStateReaderFactory;
 import io.fd.honeycomb.tutorial.write.ModuleWriterFactory;
 import net.jmob.guice.conf.core.ConfigurationModule;
@@ -57,12 +56,6 @@ public final class Module extends AbstractModule {
         // can hold multiple binding for separate yang modules
         final Multibinder<WriterFactory> writerFactoryBinder = Multibinder.newSetBinder(binder(), WriterFactory.class);
         writerFactoryBinder.addBinding().to(ModuleWriterFactory.class);
-
-        // create initializer binding
-        // can hold multiple binding for separate yang modules
-        final Multibinder<DataTreeInitializer> initializerBinder =
-                Multibinder.newSetBinder(binder(), DataTreeInitializer.class);
-        initializerBinder.addBinding().to(ConfigDataInitializer.class);
 
         // Disable notification producer for now
 //        Multibinder.newSetBinder(binder(), ManagedNotificationProducer.class).addBinding()

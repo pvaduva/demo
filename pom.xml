@@ -101,7 +101,7 @@
     <repository>
       <id>ecomp-releases</id>
       <name>Demo Release Repository</name>
-      <url>https://nexus.onap.org/content/repositories/releases/</url>
+      <url>https://mvnrepository.com/artifact/io.fd.honeycomb.common</url>
     </repository>
     <snapshotRepository>
       <id>ecomp-snapshots</id>

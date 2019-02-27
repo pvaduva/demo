@@ -21,18 +21,18 @@
 package io.fd.honeycomb.tutorial.write;
 
 import io.fd.honeycomb.translate.spi.write.ListWriterCustomizer;
-import io.fd.honeycomb.translate.v3po.util.NamingContext;
-import io.fd.honeycomb.translate.v3po.util.TranslateUtils;
+import io.fd.hc2vpp.common.translate.util.NamingContext;
 import io.fd.honeycomb.translate.write.WriteContext;
 import io.fd.honeycomb.translate.write.WriteFailedException;
 import javax.annotation.Nonnull;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sample.plugin.rev160918.sample.plugin.params.pg.streams.PgStream;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.sample.plugin.rev160918.sample.plugin.params.pg.streams.PgStreamKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.openvpp.jvpp.VppBaseCallException;
-import org.openvpp.jvpp.core.dto.PgEnableDisable;
-import org.openvpp.jvpp.core.dto.PgEnableDisableReply;
-import org.openvpp.jvpp.core.future.FutureJVppCore;
+import io.fd.vpp.jvpp.core.dto.PgEnableDisable;
+import io.fd.vpp.jvpp.core.dto.PgEnableDisableReply;
+import io.fd.vpp.jvpp.VppBaseCallException;
+import io.fd.hc2vpp.common.translate.util.JvppReplyConsumer;
+import io.fd.vpp.jvpp.core.future.FutureJVppCore;
 
 import java.util.Arrays;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Writer for {@link VxlanTunnel} list node from our YANG model.
  */
-public final class PgWriteCustomizer implements ListWriterCustomizer<PgStream, PgStreamKey> {
+public final class PgWriteCustomizer implements ListWriterCustomizer<PgStream, PgStreamKey>, JvppReplyConsumer {
 
 
     private static final Logger LOG = LoggerFactory.getLogger(PgWriteCustomizer.class);
@@ -93,17 +93,12 @@ public final class PgWriteCustomizer implements ListWriterCustomizer<PgStream, P
         //vxlanAddDelTunnel.dstAddress = TranslateUtils.ipAddressToArray(isIpv6, dataAfter.getDst());
         // There are other input parameters that are not exposed by our YANG model, default values will be used
 
-        try {
-            final PgEnableDisableReply replyForWrite = TranslateUtils
-                    .getReplyForWrite(jvppCore.pgEnableDisable(pgEnableDisable).toCompletableFuture(), id);
+        final PgEnableDisableReply replyForWrite = getReplyForWrite(jvppCore.pgEnableDisable(pgEnableDisable).toCompletableFuture(), id);
 
-            // VPP returns the index of new vxlan tunnel
-            //final int newVxlanTunnelIndex = replyForWrite.swIfIndex;
-            // It's important to store it in context so that reader knows to which name a vxlan tunnel is mapped
-            pgStreamNamingContext.addName(1, dataAfter.getId(), writeContext.getMappingContext());
-        } catch (VppBaseCallException e) {
-            throw new WriteFailedException.CreateFailedException(id, dataAfter, e);
-        }
+        // VPP returns the index of new vxlan tunnel
+        //final int newVxlanTunnelIndex = replyForWrite.swIfIndex;
+        // It's important to store it in context so that reader knows to which name a vxlan tunnel is mapped
+        pgStreamNamingContext.addName(1, dataAfter.getId(), writeContext.getMappingContext());
     }
 
     @Override
@@ -141,15 +136,10 @@ public final class PgWriteCustomizer implements ListWriterCustomizer<PgStream, P
         //vxlanAddDelTunnel.dstAddress = TranslateUtils.ipAddressToArray(isIpv6, dataBefore.getDst());
         // There are other input parameters that are not exposed by our YANG model, default values will be used
 
-        try {
-           // final VxlanAddDelTunnelReply replyForWrite = TranslateUtils
-           //         .getReplyForWrite(jvppCore.vxlanAddDelTunnel(vxlanAddDelTunnel).toCompletableFuture(), id);
-          final PgEnableDisableReply replyForWrite = TranslateUtils
-                    .getReplyForWrite(jvppCore.pgEnableDisable(pgEnableDisable).toCompletableFuture(), id);
-           // It's important to remove the mapping from context
-           pgStreamNamingContext.removeName(dataBefore.getId(), writeContext.getMappingContext());
-        } catch (VppBaseCallException e) {
-            throw new WriteFailedException.DeleteFailedException(id, e);
-        }
+        // final VxlanAddDelTunnelReply replyForWrite = TranslateUtils
+        //         .getReplyForWrite(jvppCore.vxlanAddDelTunnel(vxlanAddDelTunnel).toCompletableFuture(), id);
+        final PgEnableDisableReply replyForWrite = getReplyForWrite(jvppCore.pgEnableDisable(pgEnableDisable).toCompletableFuture(), id);
+        // It's important to remove the mapping from context
+        pgStreamNamingContext.removeName(dataBefore.getId(), writeContext.getMappingContext());
     }
 }

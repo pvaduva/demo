@@ -319,7 +319,7 @@ index 0000000..5ed2c1b
 +        <dependency>
 +            <groupId>io.fd.vpp</groupId>
 +            <artifactId>jvpp-ves</artifactId>
-+            <version>17.04</version>
++            <version>18.04</version>
 +        </dependency>
 +
 +        <!-- Honeycomb infrastructure-->
@@ -369,7 +369,7 @@ index 0000000..5ed2c1b
 +        <dependency>
 +            <groupId>io.fd.honeycomb</groupId>
 +            <artifactId>translate-impl</artifactId>
-+            <version>1.17.04</version>
++            <version>1.18.04</version>
 +        </dependency>
 +
 +
